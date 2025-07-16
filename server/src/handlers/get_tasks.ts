@@ -1,0 +1,9 @@
+
+import { type Task } from '../schema';
+
+export async function getTasks(): Promise<Task[]> {
+    // This is a placeholder declaration! Real code should be implemented here.
+    // The goal of this handler is fetching all tasks from the database.
+    // Should support filtering by completion status, assigned user, category, etc.
+    return [];
+}
