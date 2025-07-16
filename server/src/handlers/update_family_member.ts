@@ -1,14 +1,40 @@
 
+import { db } from '../db';
+import { familyMembersTable } from '../db/schema';
 import { type UpdateFamilyMemberInput, type FamilyMember } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function updateFamilyMember(input: UpdateFamilyMemberInput): Promise<FamilyMember> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is updating an existing family member in the database.
-    return Promise.resolve({
-        id: input.id,
-        name: input.name || "Updated Name",
-        email: input.email || null,
-        avatar_url: input.avatar_url || null,
-        created_at: new Date() // Placeholder date
-    } as FamilyMember);
-}
+export const updateFamilyMember = async (input: UpdateFamilyMemberInput): Promise<FamilyMember> => {
+  try {
+    // Build update object with only provided fields
+    const updateData: Partial<typeof familyMembersTable.$inferInsert> = {};
+    
+    if (input.name !== undefined) {
+      updateData.name = input.name;
+    }
+    
+    if (input.email !== undefined) {
+      updateData.email = input.email;
+    }
+    
+    if (input.avatar_url !== undefined) {
+      updateData.avatar_url = input.avatar_url;
+    }
+
+    // Perform the update
+    const result = await db.update(familyMembersTable)
+      .set(updateData)
+      .where(eq(familyMembersTable.id, input.id))
+      .returning()
+      .execute();
+
+    if (result.length === 0) {
+      throw new Error(`Family member with id ${input.id} not found`);
+    }
+
+    return result[0];
+  } catch (error) {
+    console.error('Family member update failed:', error);
+    throw error;
+  }
+};

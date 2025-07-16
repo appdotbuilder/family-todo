@@ -1,14 +1,22 @@
 
+import { db } from '../db';
+import { categoriesTable } from '../db/schema';
 import { type CreateCategoryInput, type Category } from '../schema';
 
-export async function createCategory(input: CreateCategoryInput): Promise<Category> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new task category and persisting it in the database.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+export const createCategory = async (input: CreateCategoryInput): Promise<Category> => {
+  try {
+    const result = await db.insert(categoriesTable)
+      .values({
         name: input.name,
         description: input.description,
-        color: input.color,
-        created_at: new Date() // Placeholder date
-    } as Category);
-}
+        color: input.color
+      })
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('Category creation failed:', error);
+    throw error;
+  }
+};

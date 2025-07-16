@@ -1,9 +1,26 @@
 
+import { db } from '../db';
+import { categoriesTable, tasksTable } from '../db/schema';
 import { type DeleteInput } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export async function deleteCategory(input: DeleteInput): Promise<{ success: boolean }> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is deleting a category from the database.
-    // Should handle what happens to tasks that have this category assigned.
-    return { success: true };
+  try {
+    // First, update any tasks that have this category assigned to remove the category reference
+    await db.update(tasksTable)
+      .set({ category_id: null })
+      .where(eq(tasksTable.category_id, input.id))
+      .execute();
+
+    // Then delete the category
+    const result = await db.delete(categoriesTable)
+      .where(eq(categoriesTable.id, input.id))
+      .returning()
+      .execute();
+
+    return { success: result.length > 0 };
+  } catch (error) {
+    console.error('Category deletion failed:', error);
+    throw error;
+  }
 }

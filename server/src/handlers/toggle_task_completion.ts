@@ -1,19 +1,28 @@
 
+import { db } from '../db';
+import { tasksTable } from '../db/schema';
 import { type ToggleTaskCompletionInput, type Task } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export async function toggleTaskCompletion(input: ToggleTaskCompletionInput): Promise<Task> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is toggling the completion status of a task.
-    // Should update the updated_at timestamp when completion status changes.
-    return Promise.resolve({
-        id: input.id,
-        title: "Task Title",
-        description: null,
-        due_date: null,
+  try {
+    // Update the task's completion status and updated_at timestamp
+    const result = await db.update(tasksTable)
+      .set({
         is_completed: input.is_completed,
-        assigned_to: null,
-        category_id: null,
-        created_at: new Date(), // Placeholder date
-        updated_at: new Date() // Current timestamp
-    } as Task);
+        updated_at: new Date()
+      })
+      .where(eq(tasksTable.id, input.id))
+      .returning()
+      .execute();
+
+    if (result.length === 0) {
+      throw new Error(`Task with id ${input.id} not found`);
+    }
+
+    return result[0];
+  } catch (error) {
+    console.error('Toggle task completion failed:', error);
+    throw error;
+  }
 }

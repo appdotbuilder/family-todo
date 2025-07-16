@@ -1,9 +1,23 @@
 
+import { db } from '../db';
+import { tasksTable } from '../db/schema';
 import { type Task } from '../schema';
 
 export async function getTasks(): Promise<Task[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all tasks from the database.
-    // Should support filtering by completion status, assigned user, category, etc.
-    return [];
+  try {
+    const results = await db.select()
+      .from(tasksTable)
+      .execute();
+
+    return results.map(task => ({
+      ...task,
+      // Convert timestamps to Date objects
+      created_at: new Date(task.created_at),
+      updated_at: new Date(task.updated_at),
+      due_date: task.due_date ? new Date(task.due_date) : null
+    }));
+  } catch (error) {
+    console.error('Failed to fetch tasks:', error);
+    throw error;
+  }
 }
